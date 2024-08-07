@@ -8,30 +8,47 @@
 </head>
 <body>
     <h1 class="unselectable">minu-slides</h1>
-    <canvas width="1920" height="1080"></canvas>
-    <div id="edit" style="display: none;">
-        <hr>
-        
-        <h3>텍스트</h3>
-        <label> 텍스트
-            <input type="text" name="" id="text">
-        </label>
-        <br>
-        <label> 폰트 크기
-            <input type="number" name="" id="font-size">
-        </label>
-        
-        <hr>
-        
-        <h3>트랜스폼</h3>
-        <label> x
-            <input type="number" name="" id="x">
-        </label>
-        <br>
-        <label> y
-            <input type="number" name="" id="y">
-        </label>
-    </div>
+    <main>
+        <div id="layers" class="layers">
+            <h3>레이어</h3>
+            <button onclick="createText();">텍스트 생성</button>
+            <!-- <button onclick="addImg();">이미지 추가</button><br> -->
+            <hr>
+        </div>
+        <canvas width="1920" height="1080"></canvas>
+        <div id="edit" style="display: none;">
+            <div id="text-edit">
+                <h3>텍스트</h3>
+                <label> 텍스트
+                    <input type="text" name="" id="text">
+                </label>
+                <br>
+                <label> 폰트 크기
+                    <input type="number" name="" id="font-size">
+                </label>
+                <br>
+                <label> 볼드
+                    <input type="checkbox" name="" id="bold">
+                </label>
+                <br>
+                <label> 색상
+                    <input type="color" name="" id="color">
+                </label>
+                
+                <br>
+                <br>
+                <hr> 
+            </div>
+            <h3>트랜스폼</h3>
+            <label> x
+                <input type="number" name="" id="x">
+            </label>
+            <br>
+            <label> y
+                <input type="number" name="" id="y">
+            </label>
+        </div>
+    </main>
     <script src="index.js"></script>
 </body>
 </html>
