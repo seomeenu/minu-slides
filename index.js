@@ -101,7 +101,7 @@ function setEdit(state){
             editText.value = element["text"];
             editFontSize.value = element["font_size"];
             editBold.checked = element["is_bold"];
-            editBold.value = element["color"]; 
+            editColor.value = element["color"]; 
         }
     }
     else{
