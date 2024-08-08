@@ -12,13 +12,20 @@ let saved = document.getElementById("saved");
 
 let layerElements = document.getElementById("layer-elements");
 let edit = document.getElementById("edit");
+
 let textEdit = document.getElementById("text-edit");
-let editText = document.getElementById("text");
 let editFontSize = document.getElementById("font-size");
 let editBold = document.getElementById("bold");
 let editColor = document.getElementById("color");
+
+let editText = document.getElementById("text");
 let editX = document.getElementById("x");
 let editY = document.getElementById("y");
+
+let imageEdit = document.querySelectorAll("#image-edit");
+let editImageURL = document.getElementById("image-url");
+let editImageWidth = document.getElementById("image-width");
+let editImageHeight = document.getElementById("image-height");
 
 let slideElements = document.getElementById("slide-elements");
 let editSlideColor = document.getElementById("slide-color");
@@ -31,9 +38,8 @@ let mouseDown = false;
 let currentSelection = -1;
 let currentSlide = 0;
 
-let slideData = {
-    "data": {}
-};
+let slideData = {"data": {}};
+let imgs = {}
 
 // main stuff
 
@@ -41,22 +47,31 @@ function update(){
     ctx.fillStyle = slideData["data"][currentSlide]["slide_color"];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (i in slideData["data"][currentSlide]["layer"]){
-        element = slideData["data"][currentSlide]["layer"][i];
-        if (element["type"] == "text"){
-            ctx.fillStyle = element["color"];
+        let layer = slideData["data"][currentSlide]["layer"][i];
+        let layerWidth = 0;
+        let layerHeight = 0; 
+        if (layer["type"] == "text"){
+            ctx.fillStyle = layer["color"];
             let weight = "";
-            if (element["is_bold"]){
+            if (layer["is_bold"]){
                 weight = "bold ";
             }
-            ctx.font = weight+element["font_size"].toString()+"px Pretendard";
-            ctx.fillText(element["text"], element["x"], element["y"]);
-            if (currentSelection == i) {
-                let textWidth = ctx.measureText(element["text"]).width;
-                let textHeight = element["font_size"]; 
-                ctx.strokeStyle = selectionColor;
-                ctx.lineWidth = 4;
-                ctx.strokeRect(element["x"], element["y"], textWidth, textHeight);
+            ctx.font = weight+layer["font_size"].toString()+"px Pretendard";
+            ctx.fillText(layer["text"], layer["x"], layer["y"]);
+            layerWidth = ctx.measureText(layer["text"]).width;
+            layerHeight = layer["font_size"]; 
+        }
+        else if (layer["type"] == "image" && i in imgs){
+            if (imgs[i].complete){
+                layerWidth = imgs[i].naturalWidth*layer["width"];
+                layerHeight = imgs[i].naturalHeight*layer["height"];
+                ctx.drawImage(imgs[i], layer["x"], layer["y"], layerWidth, layerHeight);
             }
+        }
+        if (currentSelection == i) {
+            ctx.strokeStyle = selectionColor;
+            ctx.lineWidth = 4;
+            ctx.strokeRect(layer["x"], layer["y"], layerWidth, layerHeight);
         }
     }
     setTimeout(() => {
@@ -69,6 +84,23 @@ function dataToURL(){
     let compressedData = LZString.compressToEncodedURIComponent(serializedData);
     let url = "#"+compressedData;
     window.location.hash = url;
+}
+
+function updateStuff(){
+    updateSlides();
+    switchSlide(currentSlide); 
+    updateImgs();
+}
+
+function updateImgs(){
+    for (i in slideData["data"][currentSlide]["layer"]){
+        let layer = slideData["data"][currentSlide]["layer"][i];
+        if (layer["type"] == "image"){
+            let newImg = new Image();
+            newImg.src = layer["url"];
+            imgs[i] = newImg;
+        }
+    }
 }
 
 function loadURLData(data=null){
@@ -91,8 +123,7 @@ function loadURLData(data=null){
         alert("invalid URL! "+e.message);
         return
     }
-    updateSlides();
-    switchSlide(currentSlide);
+    updateStuff();
     return;
 }
 
@@ -111,6 +142,11 @@ function copyData(){
     saved.classList.add("saved-blink");
 }
 
+function newSlide(){
+    location.hash = "";
+    init(); 
+}
+
 function CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2){
     return x1 < x2+w2 &&
            x2 < x1+w1 &&
@@ -123,19 +159,29 @@ function CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2){
 function setEdit(index){
     currentSelection = index;
     highlightLayer(currentSelection);
+    textEdit.style.display = "none";
+    imageEdit[0].style.display = "none";
+    imageEdit[1].style.display = "none";
     if (index != -1){
         let layer = slideData["data"][currentSlide]["layer"][currentSelection];
         edit.style.display = "block";
         window.getComputedStyle(edit).opacity;
         edit.classList.add("popup");
+        editText.value = layer["text"];
+        editX.value = layer["x"];
+        editY.value = layer["y"];
         if (layer["type"] == "text"){
             textEdit.style.display = "block";
-            editX.value = layer["x"];
-            editY.value = layer["y"];
-            editText.value = layer["text"];
             editFontSize.value = layer["font_size"];
             editBold.checked = layer["is_bold"];
             editColor.value = layer["color"]; 
+        }
+        else if (layer["type"] == "image"){
+            imageEdit[0].style.display = "block";
+            imageEdit[1].style.display = "block"; 
+            editImageURL.value = layer["url"];
+            editImageWidth.value = layer["width"];
+            editImageHeight.value = layer["height"];
         }
     }
     else{
@@ -156,13 +202,13 @@ function deleteLayer(index){
     dataToURL();
 }
 
-function createLayerElement(index, newText){
+function createLayerElement(index, newLayer){
     let layerElement = document.createElement("span");
     layerElement.id = "layer-element-"+index;
     layerElement.classList.add("layer-element");
 
-    let layerButton = document.createElement("button"); 
-    let textValue = newText["text"];
+    let layerButton = document.createElement("button");
+    let textValue = newLayer["text"];
     if (textValue.length >= 7){
         textValue = textValue.slice(0, 5)+"..."; 
     }
@@ -187,28 +233,34 @@ function createLayerElement(index, newText){
     return layerElement;
 }
 
-function createLayer(){
+function createLayer(type){
     let index = parseInt(Object.keys(slideData["data"][currentSlide]["layer"]).at(-1))+1;
     if (Object.keys(slideData["data"][currentSlide]["layer"]).length == 0){
         index = 0;
     }
-    let newText = {
-        "type": "text",
+    let newLayer = {
+        "type": type,
         "text": "텍스트",
         "x": 100,
         "y": 100,
-        "font_size": 128,
-        "is_bold": false,
-        "color": "#111111",
-    };
-    slideData["data"][currentSlide]["layer"][index] = newText;
-    let layerElement = createLayerElement(index, newText);
-    
+    }
+    if (type == "text"){
+        newLayer["font_size"] = 128;
+        newLayer["is_bold"] = false;
+        newLayer["color"] = "#111111";
+    }
+    if (type == "image"){
+        newLayer["url"] = "";
+        newLayer["text"] = "🖼️";
+        newLayer["width"] = 1;
+        newLayer["height"] = 1;
+    } 
+    slideData["data"][currentSlide]["layer"][index] = newLayer;
+    let layerElement = createLayerElement(index, newLayer);
     layerElement.classList.add("before-popup");
     layerElements.appendChild(layerElement);
     window.getComputedStyle(layerElement).opacity;
     layerElement.classList.add("popup");
-    
     setEdit(index);
     dataToURL();
 }
@@ -331,8 +383,8 @@ function highlightSlide(index){
 
 editText.addEventListener("input", e => {
     if (currentSelection != -1){
-        let layer = slideData["data"][currentSlide]["layer"][currentSelection]
-        let textValue = e.target.value
+        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let textValue = e.target.value;
         layer["text"] = textValue;
         if (textValue.length >= 7){
             textValue = textValue.slice(0, 5)+"..."; 
@@ -381,7 +433,32 @@ editSlideText.addEventListener("input", e => {
     document.getElementById("slide-button-"+currentSlide).innerText = e.target.value;
     dataToURL();
 });
-
+editImageURL.addEventListener("input", e => {
+    if (currentSelection != -1){
+        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let textValue = e.target.value;
+        layer["url"] = textValue;
+    }
+    dataToURL();
+}); 
+editImageWidth.addEventListener("input", e => {
+    if (currentSelection != -1){
+        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        layer["width"] = editImageWidth.value; 
+    }
+    dataToURL();
+});
+editImageHeight.addEventListener("input", e => {
+    if (currentSelection != -1){
+        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        layer["height"] = editImageHeight.value; 
+    }
+    dataToURL();
+});
+editImageURL.addEventListener("focusout", e => {
+    updateImgs();
+});
+ 
 canvas.addEventListener("mousemove", e => {
     mouseX = e.offsetX*canvas.width/canvas.clientWidth;
     mouseY = e.offsetY*canvas.height/canvas.clientHeight;
@@ -403,25 +480,31 @@ canvas.addEventListener("mousedown", e => {
     if (e.button == 0){
         for (i in slideData["data"][currentSlide]["layer"]){
             let layer = slideData["data"][currentSlide]["layer"][i];
+            let layerWidth = 0;
+            let layerHeight = 0; 
             if (layer["type"] == "text"){
                 ctx.font = layer["weight"]+" "+layer["font_size"].toString()+"px Pretendard";
-                let textWidth = ctx.measureText(layer["text"]).width;
-                let textHeight = layer["font_size"];
-                let collision = CheckCollision(layer["x"], layer["y"], textWidth, textHeight, mouseX, mouseY, 0, 0);
-                if (collision){
-                    setEdit(i);
-                    break;
-                }
-                else{
-                    setEdit(-1);
-                }
+                layerWidth = ctx.measureText(layer["text"]).width;
+                layerHeight = layer["font_size"];
+            }
+            else if (layer["type"] == "image"){
+                layerWidth = imgs[i].naturalWidth*layer["width"];
+                layerHeight = imgs[i].naturalHeight*layer["height"];
+            }
+            let collision = CheckCollision(layer["x"], layer["y"], layerWidth, layerHeight, mouseX, mouseY, 0, 0);
+            if (collision){
+                setEdit(i);
+                break;
+            }
+            else{
+                setEdit(-1);
             }
         }
     } 
 }) 
 
 canvas.addEventListener("mouseup", e => {
-    mouseDown = false;
+    mouseDown = false; 
     dataToURL();
 })
 
@@ -436,15 +519,21 @@ document.addEventListener("keydown", e => {
         loadURLData();
     }
     if (e.key === "y" && (navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey)) { 
-        history.forward();
+        history.forward(); 
         loadURLData();
     }
 });
 
 // init
 
-if (loadURLData()){
-    createSlide();
+function init(){
+    slideData = {"data": {}}; 
+    imgs = {};
+    if (loadURLData()){
+        createSlide();
+    }
+    setStartURL();
+    updateStuff();
 }
-update()
-setStartURL();
+init();
+update();

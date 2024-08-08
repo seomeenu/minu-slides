@@ -10,24 +10,26 @@
     <main>
         <nav>
             <h1>minu-slides</h1>
+            <button onclick="newSlide();">새 프로젝트</button>
             <button onclick="copyData();">클립보드에 저장</button>
             <div class="saved" id="saved">저장됨!</div>
         </nav>
         <section>
             <div id="layers" class="layers">
                 <h3>레이어</h3>
-                <button onclick="createLayer();">새 택스트</button>
+                <button onclick="createLayer('text');">새 택스트</button>
+                <button onclick="createLayer('image');">새 이미지</button>
                 <hr>
                 <div id="layer-elements"></div>
             </div>
             <canvas width="1920" height="1080"></canvas>
             <div id="edit" class="before-popup edit" style="display: none;">
+                <label>
+                    <input class="big-input" type="text" name="" id="text">
+                </label>
+                <br>
                 <div id="text-edit">
-                    <h3>텍스트</h3> 
-                    <label> 텍스트
-                        <input class="big-input" type="text" name="" id="text">
-                    </label> 
-                    <br>
+                    <h3>텍스트</h3>
                     <label> 폰트 크기
                         <input class="small-input" type="number" name="" id="font-size">
                     </label>
@@ -39,11 +41,17 @@
                     <label> 색상
                         <input type="color" name="" class="color-input" id="color">
                     </label>
-                    
+                    <br><br><hr><br>
+
+                </div>
+                <div id="image-edit">
+                    <h3>이미지</h3>
+                    <label> URL
+                        <input class="large-input" type="text" name="" id="image-url">
+                    </label>
                     <br>
                     <br>
-                    <hr> 
-                    <br>
+                    <br><hr><br>
                 </div>
                 <h3>트랜스폼</h3>
                 <label> x
@@ -53,6 +61,15 @@
                 <label> y
                     <input class="small-input" type="number" name="" id="y">
                 </label>
+                <div id="image-edit">
+                    <label> 너비
+                        <input class="small-input" type="number" name="" id="image-width">
+                    </label>
+                    <br>
+                    <label> 높이
+                        <input class="small-input" type="number" name="" id="image-height">
+                    </label>
+                </div>
             </div>
         </section>
         <section>
