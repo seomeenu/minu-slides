@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1 class="unselectable">minu-slides</h1>
+    <nav>
+        <h1>minu-slides</h1>
+    </nav>
     <main>
         <div id="layers" class="layers">
             <h3>레이어</h3>
@@ -16,7 +18,7 @@
             <div id="layer-elements"></div>
         </div>
         <canvas width="1920" height="1080"></canvas>
-        <div id="edit" style="display: none;">
+        <div id="edit" class="before-popup" style="display: none;">
             <div id="text-edit">
                 <h3>텍스트</h3> 
                 <label> 텍스트
@@ -28,16 +30,17 @@
                 </label>
                 <br>
                 <label> 볼드
-                    <input type="checkbox" name="" id="bold">
+                    <input type="checkbox" class="checkbox-input" name="" id="bold">
                 </label>
                 <br>
                 <label> 색상
-                    <input type="color" name="" id="color">
+                    <input type="color" name="" class="color-input" id="color">
                 </label>
                 
                 <br>
                 <br>
                 <hr> 
+                <br>
             </div>
             <h3>트랜스폼</h3>
             <label> x
@@ -57,13 +60,12 @@
             <div class="slide-elements" id="slide-elements"></div>
         </div>
         <div>
-            <h3>슬라이드</h3> 
             <label> 텍스트
                 <input type="text" name="" id="slide-text">
             </label>
             <br>
             <label> 배경
-                <input type="color" name="" id="slide-color">
+                <input type="color" class="color-input" name="" id="slide-color">
             </label>
         </div>
         <script src="index.js"></script>

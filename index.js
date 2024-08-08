@@ -1,8 +1,11 @@
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 const fps = 60;
-const selectionColor = "#80b3ff";
+const selectionColor = getComputedStyle(document.body).getPropertyValue("--acc");
 ctx.textBaseline = "top";
+
+const borderStyle = "2px solid "+selectionColor;
+const noBorderStyle = "2px solid #00000000";
 
 let layerElements = document.getElementById("layer-elements");
 let edit = document.getElementById("edit");
@@ -67,6 +70,8 @@ function setEdit(index){
     if (index != -1){
         let layer = slideData[currentSlide]["layer"][currentSelection];
         edit.style.display = "block";
+        window.getComputedStyle(edit).opacity;
+        edit.classList.add("popup");
         if (layer["type"] == "text"){
             textEdit.style.display = "block";
             editX.value = layer["x"];
@@ -79,12 +84,19 @@ function setEdit(index){
     }
     else{
         edit.style.display = "none";
+        edit.classList.remove("popup");
     }
 }
 
 function deleteLayer(index){
     layerElements.removeChild(document.getElementById("layer-element-"+index));
     delete slideData[currentSlide]["layer"][index];
+    if (currentSelection in slideData[currentSlide]["layer"]){
+        setEdit(currentSelection);
+    }
+    else{
+        setEdit(-1);
+    }
 }
 
 function createLayerElement(index, newText){
@@ -102,6 +114,7 @@ function createLayerElement(index, newText){
 
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "🗑️";
+    deleteButton.className = "delete";
     deleteButton.onclick = () => {
         deleteLayer(index);
     }
@@ -125,17 +138,22 @@ function createLayer(){
         "color": "#111111",
     };
     slideData[currentSlide]["layer"][index] = newText;
+    let layerElement = createLayerElement(index, newText);
     
-    layerElements.appendChild(createLayerElement(index, newText));
+    layerElement.className += " before-popup";
+    layerElements.appendChild(layerElement);
+    window.getComputedStyle(layerElement).opacity;
+    layerElement.className += " popup";
+    
     setEdit(index);
 }
 
 function highlightLayer(index){
     for (i in slideData[currentSlide]["layer"]){
         element = slideData[currentSlide]["layer"][i];
-        let styleString = "none";
+        let styleString = noBorderStyle;
         if (index == i){
-            styleString = "2px solid "+selectionColor;
+            styleString = borderStyle;
         }
         document.getElementById("layer-element-"+i).style.border = styleString;
     }    
@@ -168,6 +186,7 @@ function createSlideElement(index, newSlide){
 
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "🗑️";
+    deleteButton.className = "delete"
     deleteButton.onclick = () => {
         deleteSlide(index);
     }
@@ -180,6 +199,17 @@ function deleteSlide(index){
     if (Object.keys(slideData).length > 1){
         slideElements.removeChild(document.getElementById("slide-element-"+index));
         delete slideData[index];
+        if (currentSlide in slideData){
+            switchSlide(currentSlide);
+        }
+        else{
+            for (i in slideData){
+                if (i > currentSlide){
+                    switchSlide(i);
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -191,16 +221,21 @@ function createSlide(){
         "layer": {}
     }
     slideData[index] = newSlide;
-    slideElements.appendChild(createSlideElement(index, newSlide));
+    let slideElement = createSlideElement(index, newSlide);
+    
+    slideElement.className += " before-popup";
+    slideElements.appendChild(slideElement);
+    window.getComputedStyle(slideElement).opacity;
+    slideElement.className += " popup";
     switchSlide(index);
 }
 
 function highlightSlide(index){
     for (i in slideData){
         element = slideData[i];
-        let styleString = "none";
+        let styleString = noBorderStyle;
         if (index == i){
-            styleString = "2px solid "+selectionColor;
+            styleString = borderStyle;
         }
         document.getElementById("slide-element-"+i).style.border = styleString;
     }    
