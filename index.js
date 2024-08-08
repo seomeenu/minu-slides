@@ -105,7 +105,7 @@ function isStartURL(){
 }
 
 function copyData(){
-    navigator.clipboard.writeText(location.href );
+    navigator.clipboard.writeText(location.href);
     saved.classList.remove("saved-blink");
     window.getComputedStyle(saved).opacity;
     saved.classList.add("saved-blink");
