@@ -127,7 +127,10 @@ function createLayerElement(index, newText){
 }
 
 function createLayer(){
-    let index = Object.keys(slideData[currentSlide]["layer"]).length;
+    let index = parseInt(Object.keys(slideData[currentSlide]["layer"]).at(-1))+1;
+    if (Object.keys(slideData[currentSlide]["layer"]).length == 0){
+        index = 0;
+    }
     let newText = {
         "type": "text",
         "text": "텍스트",
@@ -204,18 +207,23 @@ function deleteSlide(index){
             switchSlide(currentSlide);
         }
         else{
+            let last = 0;
             for (i in slideData){
-                if (i > currentSlide){
-                    switchSlide(i);
+                last = parseInt(i);
+                if (last > currentSlide){
                     break;
                 }
             }
+            switchSlide(last);
         }
     }
 }
 
 function createSlide(){
-    let index = Object.keys(slideData).length;
+    let index = parseInt(Object.keys(slideData).at(-1))+1;
+    if (Object.keys(slideData).length == 0){
+        index = 0;
+    }
     let newSlide = {
         "text": "슬라이드",
         "slide_color": "#eeeeee",
