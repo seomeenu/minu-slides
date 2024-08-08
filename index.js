@@ -169,6 +169,7 @@ function switchSlide(index){
         element = slideData[index]["layer"][i];
         layerElements.appendChild(createLayerElement(i, element)); 
     }
+    setEdit(-1);
 }
 
 function createSlideElement(index, newSlide){

@@ -7,6 +7,7 @@
     --fg: #eeeeee;
     --lfg: #ececec;
     --acc: #5252ee;
+    --layers-width: 12rem;
 }
 
 *{
@@ -24,6 +25,7 @@
 
 h1{
     font-size: 2rem;
+    opacity: 50%;
 }
 
 h3{
@@ -35,12 +37,12 @@ canvas{
     height: calc(9 * 4rem);
 }
 
-main{
+section{
     display: flex;
-    gap: 2rem;
 }
 
 nav{
+    margin-top: 1rem;
     height: 3rem;
 }
 
@@ -49,6 +51,12 @@ button, input{
     padding: 0.5rem;
     background-color: var(--lfg);
     color: var(--bg);
+    border-radius: 0.3rem;
+}
+
+main{ 
+    max-width: max-content;
+    margin: auto;
 }
 
 .checkbox-input{
@@ -62,7 +70,8 @@ button, input{
 }
 
 .layers{
-    width: 10rem;
+    width: var(--layers-width);
+    padding-right: 0.5rem;
     height: calc(9 * 4rem);
     text-align: right;
     overflow-y: scroll;
@@ -82,9 +91,13 @@ button, input{
     width: 4rem;
 }
 
+.big-input{
+    width: 10rem;
+}
+
 .slides{
     margin-top: 1rem;
-    width: calc(calc(16 * 4rem) + 12rem); 
+    width: calc((16 * 4rem) + 1rem + var(--layers-width)); 
 }
  
 .slide-elements{
@@ -92,7 +105,7 @@ button, input{
     overflow-y: hidden;
     white-space: nowrap
 }
-
+ 
 .section-label{
     display: inline;
 }

@@ -7,68 +7,70 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav>
-        <h1>minu-slides</h1>
-    </nav>
     <main>
-        <div id="layers" class="layers">
-            <h3>레이어</h3>
-            <button onclick="createLayer();">새 택스트</button>
-            <hr>
-            <div id="layer-elements"></div>
-        </div>
-        <canvas width="1920" height="1080"></canvas>
-        <div id="edit" class="before-popup" style="display: none;">
-            <div id="text-edit">
-                <h3>텍스트</h3> 
-                <label> 텍스트
-                    <input type="text" name="" id="text">
-                </label> 
-                <br>
-                <label> 폰트 크기
-                    <input class="small-input" type="number" name="" id="font-size">
-                </label>
-                <br>
-                <label> 볼드
-                    <input type="checkbox" class="checkbox-input" name="" id="bold">
-                </label>
-                <br>
-                <label> 색상
-                    <input type="color" name="" class="color-input" id="color">
-                </label>
-                
-                <br>
-                <br>
-                <hr> 
-                <br>
+        <nav>
+            <h1>minu-slides</h1>
+        </nav>
+        <section>
+            <div id="layers" class="layers">
+                <h3>레이어</h3>
+                <button onclick="createLayer();">새 택스트</button>
+                <hr>
+                <div id="layer-elements"></div>
             </div>
-            <h3>트랜스폼</h3>
-            <label> x
-                <input class="small-input" type="number" name="" id="x">
-            </label>
-            <br>
-            <label> y
-                <input class="small-input" type="number" name="" id="y">
-            </label>
-        </div>
-    </main>
-    <main>
-        <div class="slides">
-            <h3 class="section-label">슬라이드</h3>
-            <button onclick="createSlide();">새 슬라이드</button>
-            <hr>
-            <div class="slide-elements" id="slide-elements"></div>
-        </div>
-        <div>
-            <label> 텍스트
-                <input type="text" name="" id="slide-text">
-            </label>
-            <br>
-            <label> 배경
-                <input type="color" class="color-input" name="" id="slide-color">
-            </label>
-        </div>
-        <script src="index.js"></script>
+            <canvas width="1920" height="1080"></canvas>
+            <div id="edit" class="before-popup edit" style="display: none;">
+                <div id="text-edit">
+                    <h3>텍스트</h3> 
+                    <label> 텍스트
+                        <input class="big-input" type="text" name="" id="text">
+                    </label> 
+                    <br>
+                    <label> 폰트 크기
+                        <input class="small-input" type="number" name="" id="font-size">
+                    </label>
+                    <br>
+                    <label> 볼드
+                        <input type="checkbox" class="checkbox-input" name="" id="bold">
+                    </label>
+                    <br>
+                    <label> 색상
+                        <input type="color" name="" class="color-input" id="color">
+                    </label>
+                    
+                    <br>
+                    <br>
+                    <hr> 
+                    <br>
+                </div>
+                <h3>트랜스폼</h3>
+                <label> x
+                    <input class="small-input" type="number" name="" id="x">
+                </label>
+                <br>
+                <label> y
+                    <input class="small-input" type="number" name="" id="y">
+                </label>
+            </div>
+        </section>
+        <section>
+            <div class="slides">
+                <h3 class="section-label">슬라이드</h3>
+                <button onclick="createSlide();">새 슬라이드</button>
+                <hr>
+                <div class="slide-elements" id="slide-elements"></div>
+            </div>
+            <div class="slides-edit">
+                <label> 텍스트
+                    <input type="text" name="" id="slide-text">
+                </label>
+                <br>
+                <label> 배경
+                    <input type="color" class="color-input" name="" id="slide-color">
+                </label>
+            </div>
+            <script src="index.js"></script>
+        </section>
     </main>
 </body>
 </html>
