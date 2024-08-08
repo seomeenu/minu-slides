@@ -10,18 +10,18 @@
     <h1 class="unselectable">minu-slides</h1>
     <main>
         <div id="layers" class="layers">
-            <h3>레이어</h3>
-            <button onclick="createText();">텍스트 생성</button>
-            <!-- <button onclick="addImg();">이미지 추가</button><br> -->
+            <h3 class="section-label">레이어</h3>
+            <button onclick="createLayer();">새 택스트</button>
             <hr>
+            <div id="layer-elements"></div>
         </div>
         <canvas width="1920" height="1080"></canvas>
         <div id="edit" style="display: none;">
             <div id="text-edit">
-                <h3>텍스트</h3>
+                <h3>텍스트</h3> 
                 <label> 텍스트
                     <input type="text" name="" id="text">
-                </label>
+                </label> 
                 <br>
                 <label> 폰트 크기
                     <input type="number" name="" id="font-size">
@@ -49,6 +49,24 @@
             </label>
         </div>
     </main>
-    <script src="index.js"></script>
+    <main>
+        <div class="slides">
+            <h3 class="section-label">슬라이드</h3>
+            <button onclick="createSlide();">새 슬라이드</button>
+            <hr>
+            <div class="slide-elements" id="slide-elements"></div>
+        </div>
+        <div>
+            <h3>슬라이드</h3> 
+            <label> 텍스트
+                <input type="text" name="" id="slide-text">
+            </label>
+            <br>
+            <label> 배경
+                <input type="color" name="" id="slide-color">
+            </label>
+        </div>
+        <script src="index.js"></script>
+    </main>
 </body>
 </html>

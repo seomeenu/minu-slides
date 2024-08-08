@@ -11,19 +11,42 @@ main{
     gap: 2em
 }
 
+.layers{
+    width: 10em;
+    height: calc(9 * 4em);
+    text-align: right;
+    overflow-y: scroll;
+}
+
+.layer-element{
+    width: auto;
+}
+
 .layer-text{
     margin-right: 1em;
 }
 
-*{
-    font-family: "Galmuri11";
+.slides{
+    margin-top: 1em;
+    margin-left: 12em;
+    width: calc(16 * 4em); 
 }
 
-*.unselectable{
+.slide-elements{
+    overflow-x: auto;
+    white-space: nowrap
+}
+
+.section-label{
+    display: inline;
+}
+
+*{
+    font-family: "Galmuri11";
     -moz-user-select: -moz-none;
     -khtml-user-select: none;
     -webkit-user-select: none;
- 
+    
     /*
       Introduced in IE 10.
       See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
