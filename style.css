@@ -19,17 +19,24 @@ main{
 }
 
 .layer-element{
-    width: auto;
+    margin-bottom: 1em;
 }
 
 .layer-text{
     margin-right: 1em;
 }
 
+.small-input{
+    width: 100px;
+}
+
 .slides{
     margin-top: 1em;
-    margin-left: 12em;
-    width: calc(16 * 4em); 
+    width: calc(calc(16 * 4em) + 12em); 
+}
+
+.slide-element{
+    margin-right: 1em;
 }
 
 .slide-elements{

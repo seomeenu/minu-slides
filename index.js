@@ -69,6 +69,8 @@ function setEdit(index){
         edit.style.display = "block";
         if (layer["type"] == "text"){
             textEdit.style.display = "block";
+            editX.value = layer["x"];
+            editY.value = layer["y"];
             editText.value = layer["text"];
             editFontSize.value = layer["font_size"];
             editBold.checked = layer["is_bold"];
@@ -207,8 +209,13 @@ function highlightSlide(index){
 editText.addEventListener("input", e => {
     if (currentSelection != -1){
         let layer = slideData[currentSlide]["layer"][currentSelection]
-        layer["text"] = e.target.value;
-        document.getElementById("layer-button-"+currentSelection).innerText = e.target.value;
+        let textValue = e.target.value
+        layer["text"] = textValue;
+        console.log(textValue.length);
+        if (textValue.length >= 7){
+            textValue = textValue.slice(0, 5)+"..."; 
+        }
+        document.getElementById("layer-button-"+currentSelection).innerText = textValue;
     }
 });
 editFontSize.addEventListener("input", e => { 
