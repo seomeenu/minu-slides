@@ -23,7 +23,7 @@ let mouseY = 0;
 let mouseDown = false;
 
 let currentSelection = -1;
-let currentSlide = "0";
+let currentSlide = 0;
 
 let slideData = {};
 
