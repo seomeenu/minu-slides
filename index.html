@@ -10,6 +10,8 @@
     <main>
         <nav>
             <h1>minu-slides</h1>
+            <button onclick="copyData();">클립보드에 저장</button>
+            <div class="saved" id="saved">저장됨!</div>
         </nav>
         <section>
             <div id="layers" class="layers">
@@ -69,8 +71,9 @@
                     <input type="color" class="color-input" name="" id="slide-color">
                 </label>
             </div>
-            <script src="index.js"></script>
         </section>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="index.js"></script>
 </body>
 </html>

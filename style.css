@@ -5,7 +5,7 @@
     --bg: #27272b;
     /* --lbg: #444444; */
     --fg: #eeeeee;
-    --lfg: #ececec;
+    --lfg: #aaaaaa;
     --acc: #5252ee;
     --layers-width: 12rem;
 }
@@ -13,7 +13,7 @@
 *{
     background-color: var(--bg);
     color: var(--fg);
-    font-family: "Pretendard";
+    font-family: "Pretendard"; 
     margin: 0.2rem;
     padding: 0;
     -moz-user-select: -moz-none;
@@ -43,13 +43,21 @@ section{
 
 nav{
     margin-top: 1rem;
-    height: 3rem;
+    margin-bottom: 1rem;
+}
+nav *{
+    display: inline;
+}
+
+button:hover, input:hover{
+    background-color: var(--lfg);   
 }
 
 button, input{
+    transition-duration: 0.1s;
     border: none;
     padding: 0.5rem;
-    background-color: var(--lfg);
+    background-color: var(--fg);
     color: var(--bg);
     border-radius: 0.3rem;
 }
@@ -120,11 +128,28 @@ main{
 
 .before-popup{
     transform: translateY(0.6rem);
-    opacity: 0%;
+    opacity: 0;
 }
 
 .popup{
     transform: translateY(0rem);
-    opacity: 100%;
+    opacity: 1;
     transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.saved{
+    opacity: 0;
+}
+
+.saved-blink{
+    animation: blink 1s;
 }

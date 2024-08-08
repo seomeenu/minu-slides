@@ -7,6 +7,9 @@ ctx.textBaseline = "top";
 const borderStyle = "2px solid "+selectionColor;
 const noBorderStyle = "2px solid #00000000";
 
+let startURL = "";
+let saved = document.getElementById("saved");
+
 let layerElements = document.getElementById("layer-elements");
 let edit = document.getElementById("edit");
 let textEdit = document.getElementById("text-edit");
@@ -28,13 +31,17 @@ let mouseDown = false;
 let currentSelection = -1;
 let currentSlide = 0;
 
-let slideData = {};
+let slideData = {
+    "data": {}
+};
+
+// main stuff
 
 function update(){
-    ctx.fillStyle = slideData[currentSlide]["slide_color"];
+    ctx.fillStyle = slideData["data"][currentSlide]["slide_color"];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (i in slideData[currentSlide]["layer"]){
-        element = slideData[currentSlide]["layer"][i];
+    for (i in slideData["data"][currentSlide]["layer"]){
+        element = slideData["data"][currentSlide]["layer"][i];
         if (element["type"] == "text"){
             ctx.fillStyle = element["color"];
             let weight = "";
@@ -57,6 +64,53 @@ function update(){
     }, 1000/fps);
 }
 
+function dataToURL(){
+    let serializedData = JSON.stringify(slideData["data"]);
+    let compressedData = LZString.compressToEncodedURIComponent(serializedData);
+    let url = "#"+compressedData;
+    window.location.hash = url;
+}
+
+function loadURLData(data=null){
+    let urlData = location.hash.substring(1);
+    if (data != null){
+        urlData = data;
+    }
+    if (!urlData){
+        return true;
+    }
+    let decompressedData = LZString.decompressFromEncodedURIComponent(urlData);
+    if (!decompressedData){
+        alert("invalid URL!");
+        return;
+    }
+    try{
+        slideData["data"] = JSON.parse(decompressedData);
+    }
+    catch(e){
+        alert("invalid URL! "+e.message);
+        return
+    }
+    updateSlides();
+    switchSlide(currentSlide);
+    return;
+}
+
+function setStartURL(){
+    startURL = location.hash.substring(1);
+}
+
+function isStartURL(){
+    return location.hash.substring(1) == startURL;
+}
+
+function copyData(){
+    navigator.clipboard.writeText(location.href );
+    saved.classList.remove("saved-blink");
+    window.getComputedStyle(saved).opacity;
+    saved.classList.add("saved-blink");
+}
+
 function CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2){
     return x1 < x2+w2 &&
            x2 < x1+w1 &&
@@ -64,11 +118,13 @@ function CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2){
            y2 < y1+h1;
 }
 
+// layer stuff
+
 function setEdit(index){
     currentSelection = index;
     highlightLayer(currentSelection);
     if (index != -1){
-        let layer = slideData[currentSlide]["layer"][currentSelection];
+        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
         edit.style.display = "block";
         window.getComputedStyle(edit).opacity;
         edit.classList.add("popup");
@@ -90,22 +146,27 @@ function setEdit(index){
 
 function deleteLayer(index){
     layerElements.removeChild(document.getElementById("layer-element-"+index));
-    delete slideData[currentSlide]["layer"][index];
-    if (currentSelection in slideData[currentSlide]["layer"]){
+    delete slideData["data"][currentSlide]["layer"][index];
+    if (currentSelection in slideData["data"][currentSlide]["layer"]){
         setEdit(currentSelection);
     }
     else{
         setEdit(-1);
     }
+    dataToURL();
 }
 
 function createLayerElement(index, newText){
     let layerElement = document.createElement("span");
     layerElement.id = "layer-element-"+index;
-    layerElement.className = "layer-element"
+    layerElement.classList.add("layer-element");
 
     let layerButton = document.createElement("button"); 
-    layerButton.innerText = newText["text"]
+    let textValue = newText["text"];
+    if (textValue.length >= 7){
+        textValue = textValue.slice(0, 5)+"..."; 
+    }
+    layerButton.innerText = textValue;
     layerButton.id = "layer-button-"+index;
     layerButton.onclick = () => {
         setEdit(index);
@@ -114,7 +175,7 @@ function createLayerElement(index, newText){
 
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "🗑️";
-    deleteButton.className = "delete";
+    deleteButton.classList.add("delete");
     deleteButton.onclick = () => {
         deleteLayer(index);
     }
@@ -127,8 +188,8 @@ function createLayerElement(index, newText){
 }
 
 function createLayer(){
-    let index = parseInt(Object.keys(slideData[currentSlide]["layer"]).at(-1))+1;
-    if (Object.keys(slideData[currentSlide]["layer"]).length == 0){
+    let index = parseInt(Object.keys(slideData["data"][currentSlide]["layer"]).at(-1))+1;
+    if (Object.keys(slideData["data"][currentSlide]["layer"]).length == 0){
         index = 0;
     }
     let newText = {
@@ -140,20 +201,21 @@ function createLayer(){
         "is_bold": false,
         "color": "#111111",
     };
-    slideData[currentSlide]["layer"][index] = newText;
+    slideData["data"][currentSlide]["layer"][index] = newText;
     let layerElement = createLayerElement(index, newText);
     
-    layerElement.className += " before-popup";
+    layerElement.classList.add("before-popup");
     layerElements.appendChild(layerElement);
     window.getComputedStyle(layerElement).opacity;
-    layerElement.className += " popup";
+    layerElement.classList.add("popup");
     
     setEdit(index);
+    dataToURL();
 }
 
 function highlightLayer(index){
-    for (i in slideData[currentSlide]["layer"]){
-        element = slideData[currentSlide]["layer"][i];
+    for (i in slideData["data"][currentSlide]["layer"]){
+        element = slideData["data"][currentSlide]["layer"][i];
         let styleString = noBorderStyle;
         if (index == i){
             styleString = borderStyle;
@@ -162,15 +224,35 @@ function highlightLayer(index){
     }    
 }
 
+// slide stuff
+
+function updateSlides(){
+    slideElements.innerHTML = "";
+    for (i in slideData["data"]){
+        let slide = slideData["data"][i]; 
+        let slideElement = createSlideElement(i, slide);
+        slideElements.appendChild(slideElement); 
+    }
+}
+
 function switchSlide(index){
+    if (index == -1){
+        for (i in slideData["data"]){
+            index = parseInt(i);
+            if (index > currentSlide){
+                break;
+            }
+        }
+    }
     layerElements.innerHTML = ""; 
     highlightSlide(index);
     currentSlide = index;
-    editSlideColor.value = slideData[index]["slide_color"]
-    editSlideText.value = slideData[index]["text"]
-    for (i in slideData[index]["layer"]){
-        element = slideData[index]["layer"][i];
-        layerElements.appendChild(createLayerElement(i, element)); 
+    editSlideColor.value = slideData["data"][index]["slide_color"];
+    editSlideText.value = slideData["data"][index]["text"];
+    for (i in slideData["data"][index]["layer"]){
+        let layer = slideData["data"][index]["layer"][i]; 
+        let layerElement = createLayerElement(i, layer)
+        layerElements.appendChild(layerElement);
     }
     setEdit(-1);
 }
@@ -178,7 +260,7 @@ function switchSlide(index){
 function createSlideElement(index, newSlide){
     let slideElement = document.createElement("span");
     slideElement.id = "slide-element-"+index;
-    slideElement.className = "slide-element"
+    slideElement.classList.add("slide-element");
 
     let slideButton = document.createElement("button"); 
     slideButton.innerText = newSlide["text"]
@@ -190,7 +272,7 @@ function createSlideElement(index, newSlide){
 
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "🗑️";
-    deleteButton.className = "delete"
+    deleteButton.classList.add("delete");
     deleteButton.onclick = () => {
         deleteSlide(index);
     }
@@ -200,28 +282,22 @@ function createSlideElement(index, newSlide){
 }
 
 function deleteSlide(index){
-    if (Object.keys(slideData).length > 1){
+    if (Object.keys(slideData["data"]).length > 1){
         slideElements.removeChild(document.getElementById("slide-element-"+index));
-        delete slideData[index];
-        if (currentSlide in slideData){
+        delete slideData["data"][index];
+        if (currentSlide in slideData["data"]){
             switchSlide(currentSlide);
         }
         else{
-            let last = 0;
-            for (i in slideData){
-                last = parseInt(i);
-                if (last > currentSlide){
-                    break;
-                }
-            }
-            switchSlide(last);
+            switchSlide(-1);
         }
     }
+    dataToURL();
 }
 
 function createSlide(){
-    let index = parseInt(Object.keys(slideData).at(-1))+1;
-    if (Object.keys(slideData).length == 0){
+    let index = parseInt(Object.keys(slideData["data"]).at(-1))+1;
+    if (Object.keys(slideData["data"]).length == 0){
         index = 0;
     }
     let newSlide = {
@@ -229,19 +305,20 @@ function createSlide(){
         "slide_color": "#eeeeee",
         "layer": {}
     }
-    slideData[index] = newSlide;
+    slideData["data"][index] = newSlide;
     let slideElement = createSlideElement(index, newSlide);
     
-    slideElement.className += " before-popup";
+    slideElement.classList.add("before-popup");
     slideElements.appendChild(slideElement);
     window.getComputedStyle(slideElement).opacity;
-    slideElement.className += " popup";
+    slideElement.classList.add("popup");
     switchSlide(index);
+    dataToURL();
 }
 
 function highlightSlide(index){
-    for (i in slideData){
-        element = slideData[i];
+    for (i in slideData["data"]){
+        element = slideData["data"][i];
         let styleString = noBorderStyle;
         if (index == i){
             styleString = borderStyle;
@@ -250,50 +327,59 @@ function highlightSlide(index){
     }    
 }
 
+//events
+
 editText.addEventListener("input", e => {
     if (currentSelection != -1){
-        let layer = slideData[currentSlide]["layer"][currentSelection]
+        let layer = slideData["data"][currentSlide]["layer"][currentSelection]
         let textValue = e.target.value
         layer["text"] = textValue;
-        console.log(textValue.length);
         if (textValue.length >= 7){
             textValue = textValue.slice(0, 5)+"..."; 
         }
         document.getElementById("layer-button-"+currentSelection).innerText = textValue;
+        dataToURL();
     }
 });
 editFontSize.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData[currentSlide]["layer"][currentSelection]["font_size"] = parseInt(e.target.value);
+        slideData["data"][currentSlide]["layer"][currentSelection]["font_size"] = parseInt(e.target.value);
+        dataToURL();
     }
 });
 editBold.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData[currentSlide]["layer"][currentSelection]["is_bold"] = editBold.checked;
+        slideData["data"][currentSlide]["layer"][currentSelection]["is_bold"] = editBold.checked;
+        dataToURL();
     }
 });
 editColor.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData[currentSlide]["layer"][currentSelection]["color"] = e.target.value;
+        slideData["data"][currentSlide]["layer"][currentSelection]["color"] = e.target.value;
+        dataToURL();
     }
 });
 editX.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData[currentSlide]["layer"][currentSelection]["x"] = parseInt(e.target.value);
+        slideData["data"][currentSlide]["layer"][currentSelection]["x"] = parseInt(e.target.value);
+        dataToURL();
     }
 });
 editY.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData[currentSlide]["layer"][currentSelection]["y"] = parseInt(e.target.value);
+        slideData["data"][currentSlide]["layer"][currentSelection]["y"] = parseInt(e.target.value);
+        dataToURL();
     }
 });
 editSlideColor.addEventListener("input", e => { 
-    slideData[currentSlide]["slide_color"] = e.target.value;
+    slideData["data"][currentSlide]["slide_color"] = e.target.value;
+    dataToURL();
 });
 editSlideText.addEventListener("input", e => {
-    let slide = slideData[currentSlide]
+    let slide = slideData["data"][currentSlide]
     slide["text"] = e.target.value;
     document.getElementById("slide-button-"+currentSlide).innerText = e.target.value;
+    dataToURL();
 });
 
 canvas.addEventListener("mousemove", e => {
@@ -303,7 +389,7 @@ canvas.addEventListener("mousemove", e => {
         let movementX = e.movementX*canvas.width/canvas.clientWidth;
         let movementY = e.movementY*canvas.height/canvas.clientHeight;
         if (currentSelection != -1) {
-            let layer = slideData[currentSlide]["layer"][currentSelection]
+            let layer = slideData["data"][currentSlide]["layer"][currentSelection]
             layer["x"] += movementX;
             layer["y"] += movementY;
             editX.value = layer["x"];
@@ -315,8 +401,8 @@ canvas.addEventListener("mousemove", e => {
 canvas.addEventListener("mousedown", e => {
     mouseDown = true;
     if (e.button == 0){
-        for (i in slideData[currentSlide]["layer"]){
-            let layer = slideData[currentSlide]["layer"][i];
+        for (i in slideData["data"][currentSlide]["layer"]){
+            let layer = slideData["data"][currentSlide]["layer"][i];
             if (layer["type"] == "text"){
                 ctx.font = layer["weight"]+" "+layer["font_size"].toString()+"px Pretendard";
                 let textWidth = ctx.measureText(layer["text"]).width;
@@ -331,19 +417,34 @@ canvas.addEventListener("mousedown", e => {
                 }
             }
         }
-    }
+    } 
 }) 
 
 canvas.addEventListener("mouseup", e => {
     mouseDown = false;
+    dataToURL();
 })
 
-document.addEventListener("keydown", function(e) {
-    if (e.key === 's' && (navigator.userAgent.includes('Mac') ? e.metaKey : e.ctrlKey)) {
+document.addEventListener("keydown", e => {
+    if (e.key === "s" && (navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey)) { 
         e.preventDefault();
-        // alert('captured');
     }
-}, false);
+    if (e.key === "z" && (navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey)) {
+        if (!isStartURL()){
+            history.back();
+        }
+        loadURLData();
+    }
+    if (e.key === "y" && (navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey)) { 
+        history.forward();
+        loadURLData();
+    }
+});
 
-createSlide();
+// init
+
+if (loadURLData()){
+    createSlide();
+}
 update()
+setStartURL();
