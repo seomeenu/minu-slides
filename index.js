@@ -157,7 +157,7 @@ function CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2){
 function driveURL(){
     let url = prompt();
     if (url.startsWith("https://drive.google.com/file/d/")){
-        url = "https://lh3.google.com/u/0/d/"+url.substring("https://drive.google.com/file/d/".length, url.indexOf("/view?"));
+        url = "https://lh3.googleusercontent.com/d/"+url.substring("https://drive.google.com/file/d/".length, url.indexOf("/view?"));
         if (currentSelection != -1){ 
             let layer = slideData["data"][currentSlide]["layer"][currentSelection];
             layer["url"] = url;
