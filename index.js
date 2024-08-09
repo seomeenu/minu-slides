@@ -36,18 +36,18 @@ let mouseY = 0;
 let mouseDown = false;
 
 let currentSelection = -1;
-let currentSlide = 0;
+// let currentSlide = 0;
 
-let slideData = {"data": {}};
+let slideData = {};
 let imgs = {}
 
 // main stuff
 
 function update(){
-    ctx.fillStyle = slideData["data"][currentSlide]["slide_color"];
+    ctx.fillStyle = slideData["data"][slideData["current_slide"]]["slide_color"];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (i in slideData["data"][currentSlide]["layer"]){
-        let layer = slideData["data"][currentSlide]["layer"][i];
+    for (i in slideData["data"][slideData["current_slide"]]["layer"]){
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][i];
         let layerWidth = 0;
         let layerHeight = 0; 
         if (layer["type"] == "text"){
@@ -62,10 +62,12 @@ function update(){
             layerHeight = layer["font_size"]; 
         }
         else if (layer["type"] == "image" && i in imgs){
-            if (imgs[i].complete){
-                layerWidth = imgs[i].naturalWidth*layer["width"];
-                layerHeight = imgs[i].naturalHeight*layer["height"];
-                ctx.drawImage(imgs[i], layer["x"], layer["y"], layerWidth, layerHeight);
+            if (layer["url"].trim() != ""){
+                if (imgs[i].complete){
+                    layerWidth = imgs[i].naturalWidth*layer["width"];
+                    layerHeight = imgs[i].naturalHeight*layer["height"];
+                    ctx.drawImage(imgs[i], layer["x"], layer["y"], layerWidth, layerHeight);
+                }
             }
         }
         if (currentSelection == i) {
@@ -88,13 +90,13 @@ function dataToURL(){
 
 function updateStuff(){
     updateSlides();
-    switchSlide(currentSlide); 
+    switchSlide(slideData["current_slide"]); 
     updateImgs();
 }
 
 function updateImgs(){
-    for (i in slideData["data"][currentSlide]["layer"]){
-        let layer = slideData["data"][currentSlide]["layer"][i];
+    for (i in slideData["data"][slideData["current_slide"]]["layer"]){
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][i];
         if (layer["type"] == "image"){
             let newImg = new Image();
             newImg.src = layer["url"];
@@ -103,28 +105,28 @@ function updateImgs(){
     }
 }
 
-function loadURLData(data=null){
+function URLToData(data=null){
     let urlData = location.hash.substring(1);
     if (data != null){
         urlData = data;
     }
     if (!urlData){
-        return true;
+        return null;
     }
     let decompressedData = LZString.decompressFromEncodedURIComponent(urlData);
     if (!decompressedData){
         alert("invalid URL!");
-        return;
+        return false;
     }
     try{
         slideData["data"] = JSON.parse(decompressedData);
     }
     catch(e){
         alert("invalid URL! "+e.message);
-        return
+        return false;
     }
     updateStuff();
-    return;
+    return false;
 }
 
 function setStartURL(){
@@ -159,7 +161,7 @@ function driveURL(){
     if (url.startsWith("https://drive.google.com/file/d/")){
         url = "https://lh3.googleusercontent.com/d/"+url.substring("https://drive.google.com/file/d/".length, url.indexOf("/view?"));
         if (currentSelection != -1){ 
-            let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+            let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
             layer["url"] = url;
             editImageURL.value = url;
         }
@@ -177,7 +179,7 @@ function setEdit(index){
     imageEdit[0].style.display = "none";
     imageEdit[1].style.display = "none";
     if (index != -1){
-        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
         edit.style.display = "block";
         window.getComputedStyle(edit).opacity;
         edit.classList.add("popup");
@@ -206,8 +208,8 @@ function setEdit(index){
 
 function deleteLayer(index){
     layerElements.removeChild(document.getElementById("layer-element-"+index));
-    delete slideData["data"][currentSlide]["layer"][index];
-    if (currentSelection in slideData["data"][currentSlide]["layer"]){
+    delete slideData["data"][slideData["current_slide"]]["layer"][index];
+    if (currentSelection in slideData["data"][slideData["current_slide"]]["layer"]){
         setEdit(currentSelection);
     }
     else{
@@ -248,8 +250,8 @@ function createLayerElement(index, newLayer){
 }
 
 function createLayer(type){
-    let index = parseInt(Object.keys(slideData["data"][currentSlide]["layer"]).at(-1))+1;
-    if (Object.keys(slideData["data"][currentSlide]["layer"]).length == 0){
+    let index = parseInt(Object.keys(slideData["data"][slideData["current_slide"]]["layer"]).at(-1))+1;
+    if (Object.keys(slideData["data"][slideData["current_slide"]]["layer"]).length == 0){
         index = 0;
     }
     let newLayer = {
@@ -269,7 +271,7 @@ function createLayer(type){
         newLayer["width"] = 1;
         newLayer["height"] = 1;
     } 
-    slideData["data"][currentSlide]["layer"][index] = newLayer;
+    slideData["data"][slideData["current_slide"]]["layer"][index] = newLayer;
     let layerElement = createLayerElement(index, newLayer);
     layerElement.classList.add("before-popup");
     layerElements.appendChild(layerElement);
@@ -280,8 +282,8 @@ function createLayer(type){
 }
 
 function highlightLayer(index){
-    for (i in slideData["data"][currentSlide]["layer"]){
-        element = slideData["data"][currentSlide]["layer"][i];
+    for (i in slideData["data"][slideData["current_slide"]]["layer"]){
+        element = slideData["data"][slideData["current_slide"]]["layer"][i];
         let styleString = noBorderStyle;
         if (index == i){
             styleString = borderStyle;
@@ -302,17 +304,20 @@ function updateSlides(){
 }
 
 function switchSlide(index){
+    if (!(index in slideData["data"])){
+        index = -1;
+    }
     if (index == -1){
         for (i in slideData["data"]){
             index = parseInt(i);
-            if (index > currentSlide){
+            if (index > slideData["current_slide"]){
                 break;
             }
         }
     }
     layerElements.innerHTML = ""; 
     highlightSlide(index);
-    currentSlide = index;
+    slideData["current_slide"] = index;
     editSlideColor.value = slideData["data"][index]["slide_color"];
     editSlideText.value = slideData["data"][index]["text"];
     for (i in slideData["data"][index]["layer"]){
@@ -321,6 +326,7 @@ function switchSlide(index){
         layerElements.appendChild(layerElement);
     }
     setEdit(-1);
+    dataToURL();
 }
 
 function createSlideElement(index, newSlide){
@@ -351,8 +357,8 @@ function deleteSlide(index){
     if (Object.keys(slideData["data"]).length > 1){
         slideElements.removeChild(document.getElementById("slide-element-"+index));
         delete slideData["data"][index];
-        if (currentSlide in slideData["data"]){
-            switchSlide(currentSlide);
+        if (slideData["current_slide"] in slideData["data"]){
+            switchSlide(slideData["current_slide"]);
         }
         else{
             switchSlide(-1);
@@ -397,7 +403,7 @@ function highlightSlide(index){
 
 editText.addEventListener("input", e => {
     if (currentSelection != -1){
-        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
         let textValue = e.target.value;
         layer["text"] = textValue;
         if (textValue.length >= 7){
@@ -409,47 +415,47 @@ editText.addEventListener("input", e => {
 });
 editFontSize.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData["data"][currentSlide]["layer"][currentSelection]["font_size"] = parseInt(e.target.value);
+        slideData["data"][slideData["current_slide"]]["layer"][currentSelection]["font_size"] = parseInt(e.target.value);
         dataToURL();
     }
 });
 editBold.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData["data"][currentSlide]["layer"][currentSelection]["is_bold"] = editBold.checked;
+        slideData["data"][slideData["current_slide"]]["layer"][currentSelection]["is_bold"] = editBold.checked;
         dataToURL();
     }
 });
 editColor.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData["data"][currentSlide]["layer"][currentSelection]["color"] = e.target.value;
+        slideData["data"][slideData["current_slide"]]["layer"][currentSelection]["color"] = e.target.value;
         dataToURL();
     }
 });
 editX.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData["data"][currentSlide]["layer"][currentSelection]["x"] = parseInt(e.target.value);
+        slideData["data"][slideData["current_slide"]]["layer"][currentSelection]["x"] = parseInt(e.target.value);
         dataToURL();
     }
 });
 editY.addEventListener("input", e => { 
     if (currentSelection != -1){
-        slideData["data"][currentSlide]["layer"][currentSelection]["y"] = parseInt(e.target.value);
+        slideData["data"][slideData["current_slide"]]["layer"][currentSelection]["y"] = parseInt(e.target.value);
         dataToURL();
     }
 });
 editSlideColor.addEventListener("input", e => { 
-    slideData["data"][currentSlide]["slide_color"] = e.target.value;
+    slideData["data"][slideData["current_slide"]]["slide_color"] = e.target.value;
     dataToURL();
 });
 editSlideText.addEventListener("input", e => {
-    let slide = slideData["data"][currentSlide]
+    let slide = slideData["data"][slideData["current_slide"]]
     slide["text"] = e.target.value;
-    document.getElementById("slide-button-"+currentSlide).innerText = e.target.value;
+    document.getElementById("slide-button-"+slideData["current_slide"]).innerText = e.target.value;
     dataToURL();
 });
 editImageURL.addEventListener("input", e => {
     if (currentSelection != -1){
-        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
         let textValue = e.target.value;
         layer["url"] = textValue;
     }
@@ -457,14 +463,14 @@ editImageURL.addEventListener("input", e => {
 }); 
 editImageWidth.addEventListener("input", e => {
     if (currentSelection != -1){
-        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
         layer["width"] = editImageWidth.value; 
     }
     dataToURL();
 });
 editImageHeight.addEventListener("input", e => {
     if (currentSelection != -1){
-        let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
         layer["height"] = editImageHeight.value; 
     }
     dataToURL();
@@ -480,7 +486,7 @@ canvas.addEventListener("mousemove", e => {
         let movementX = e.movementX*canvas.width/canvas.clientWidth;
         let movementY = e.movementY*canvas.height/canvas.clientHeight;
         if (currentSelection != -1) {
-            let layer = slideData["data"][currentSlide]["layer"][currentSelection]
+            let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection]
             layer["x"] += movementX;
             layer["y"] += movementY;
             editX.value = layer["x"];
@@ -492,8 +498,8 @@ canvas.addEventListener("mousemove", e => {
 canvas.addEventListener("mousedown", e => {
     mouseDown = true;
     if (e.button == 0){
-        for (i in slideData["data"][currentSlide]["layer"]){
-            let layer = slideData["data"][currentSlide]["layer"][i];
+        for (i in slideData["data"][slideData["current_slide"]]["layer"]){
+            let layer = slideData["data"][slideData["current_slide"]]["layer"][i];
             let layerWidth = 0;
             let layerHeight = 0; 
             if (layer["type"] == "text"){
@@ -502,9 +508,11 @@ canvas.addEventListener("mousedown", e => {
                 layerHeight = layer["font_size"];
             }
             else if (layer["type"] == "image"){
-                if (imgs[i].complete){ 
-                    layerWidth = imgs[i].naturalWidth*layer["width"];
-                    layerHeight = imgs[i].naturalHeight*layer["height"];
+                if (layer["url"].trim() != ""){
+                    if (imgs[i].complete){ 
+                        layerWidth = imgs[i].naturalWidth*layer["width"];
+                        layerHeight = imgs[i].naturalHeight*layer["height"];
+                    }
                 }
             }
             let collision = CheckCollision(layer["x"], layer["y"], layerWidth, layerHeight, mouseX, mouseY, 0, 0);
@@ -532,20 +540,23 @@ document.addEventListener("keydown", e => {
         if (!isStartURL()){
             history.back();
         }
-        loadURLData();
+        URLToData();
     }
     if (e.key === "y" && (navigator.userAgent.includes("Mac") ? e.metaKey : e.ctrlKey)) { 
         history.forward(); 
-        loadURLData();
+        URLToData();
     }
 });
 
 // init
 
 function init(){
-    slideData = {"data": {}}; 
+    slideData = {
+        "data": {},
+        "current_slide": 0
+    }; 
     imgs = {};
-    if (loadURLData()){
+    if (URLToData() == null){
         createSlide();
     }
     setStartURL();
