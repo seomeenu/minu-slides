@@ -154,6 +154,20 @@ function CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2){
            y2 < y1+h1;
 }
 
+function driveURL(){
+    let url = prompt();
+    if (url.startsWith("https://drive.google.com/file/d/")){
+        url = "https://lh3.google.com/u/0/d/"+url.substring("https://drive.google.com/file/d/".length, url.indexOf("/view?"));
+        if (currentSelection != -1){ 
+            let layer = slideData["data"][currentSlide]["layer"][currentSelection];
+            layer["url"] = url;
+            editImageURL.value = url;
+        }
+        updateImgs();
+        dataToURL();
+    }
+}
+
 // layer stuff
 
 function setEdit(index){
@@ -488,8 +502,10 @@ canvas.addEventListener("mousedown", e => {
                 layerHeight = layer["font_size"];
             }
             else if (layer["type"] == "image"){
-                layerWidth = imgs[i].naturalWidth*layer["width"];
-                layerHeight = imgs[i].naturalHeight*layer["height"];
+                if (imgs[i].complete){ 
+                    layerWidth = imgs[i].naturalWidth*layer["width"];
+                    layerHeight = imgs[i].naturalHeight*layer["height"];
+                }
             }
             let collision = CheckCollision(layer["x"], layer["y"], layerWidth, layerHeight, mouseX, mouseY, 0, 0);
             if (collision){
