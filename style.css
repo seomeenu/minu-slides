@@ -49,11 +49,11 @@ nav *{
     display: inline;
 }
 
-button:hover, input:hover{
+button:hover, input:hover, textarea:hover{
     background-color: var(--lfg);   
 }
 
-button, input{
+button, input, textarea{
     transition-duration: 0.1s;
     border: none;
     padding: 0.5rem;

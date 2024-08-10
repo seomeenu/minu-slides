@@ -12,6 +12,7 @@ let saved = document.getElementById("saved");
 
 let layerElements = document.getElementById("layer-elements");
 let edit = document.getElementById("edit");
+let editLabel = document.getElementById("label");
 
 let textEdit = document.getElementById("text-edit");
 let editFontSize = document.getElementById("font-size");
@@ -53,13 +54,19 @@ function update(){
         if (layer["type"] == "text"){
             ctx.fillStyle = layer["color"];
             let weight = "";
-            if (layer["is_bold"]){
+            if (layer["is_bold"]){w
                 weight = "bold ";
             }
             ctx.font = weight+layer["font_size"].toString()+"px Pretendard";
-            ctx.fillText(layer["text"], layer["x"], layer["y"]);
-            layerWidth = ctx.measureText(layer["text"]).width;
+            layerWidth = 0;
             layerHeight = layer["font_size"]; 
+            let lines = layer["text"].split("\n");
+            for (j=0; j<lines.length; j++){
+                line = lines[j];
+                ctx.fillText(line, layer["x"], layer["y"]+layerHeight*j);
+                layerWidth = Math.max(layerWidth, ctx.measureText(line).width)
+            }
+            layerHeight *= lines.length;
         }
         else if (layer["type"] == "image" && i in imgs){
             if (layer["url"].trim() != ""){
@@ -183,11 +190,12 @@ function setEdit(index){
         edit.style.display = "block";
         window.getComputedStyle(edit).opacity;
         edit.classList.add("popup");
-        editText.value = layer["text"];
+        editLabel.value = layer["label"];
         editX.value = layer["x"];
         editY.value = layer["y"];
         if (layer["type"] == "text"){
             textEdit.style.display = "block";
+            editText.value = layer["text"];
             editFontSize.value = layer["font_size"];
             editBold.checked = layer["is_bold"];
             editColor.value = layer["color"]; 
@@ -224,7 +232,7 @@ function createLayerElement(index, newLayer){
     layerElement.classList.add("layer-element");
 
     let layerButton = document.createElement("button");
-    let textValue = newLayer["text"];
+    let textValue = newLayer["label"];
     if (textValue.length >= 7){
         textValue = textValue.slice(0, 5)+"..."; 
     }
@@ -256,18 +264,19 @@ function createLayer(type){
     }
     let newLayer = {
         "type": type,
-        "text": "텍스트",
+        "label": "텍스트",
         "x": 100,
         "y": 100,
     }
     if (type == "text"){
+        newLayer["text"] = "";
         newLayer["font_size"] = 128;
         newLayer["is_bold"] = false;
         newLayer["color"] = "#111111";
     }
     if (type == "image"){
         newLayer["url"] = "";
-        newLayer["text"] = "🖼️";
+        newLayer["label"] = "🖼️";
         newLayer["width"] = 1;
         newLayer["height"] = 1;
     } 
@@ -401,15 +410,23 @@ function highlightSlide(index){
 
 //events
 
+editLabel.addEventListener("input", e => {
+    if (currentSelection != -1){
+        let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
+        let textValue = e.target.value;
+        layer["label"] = textValue;
+        if (textValue.length >= 7){
+            textValue = textValue.slice(0, 5)+"..."; 
+        }
+        document.getElementById("layer-button-"+currentSelection).innerText = textValue;
+        dataToURL();
+    }
+});
 editText.addEventListener("input", e => {
     if (currentSelection != -1){
         let layer = slideData["data"][slideData["current_slide"]]["layer"][currentSelection];
         let textValue = e.target.value;
         layer["text"] = textValue;
-        if (textValue.length >= 7){
-            textValue = textValue.slice(0, 5)+"..."; 
-        }
-        document.getElementById("layer-button-"+currentSelection).innerText = textValue;
         dataToURL();
     }
 });
@@ -504,8 +521,14 @@ canvas.addEventListener("mousedown", e => {
             let layerHeight = 0; 
             if (layer["type"] == "text"){
                 ctx.font = layer["weight"]+" "+layer["font_size"].toString()+"px Pretendard";
-                layerWidth = ctx.measureText(layer["text"]).width;
-                layerHeight = layer["font_size"];
+                layerWidth = 0;
+                layerHeight = layer["font_size"]; 
+                let lines = layer["text"].split("\n");
+                for (j=0; j<lines.length; j++){
+                    line = lines[j];
+                    layerWidth = Math.max(layerWidth, ctx.measureText(line).width)
+                }
+                layerHeight *= lines.length;
             }
             else if (layer["type"] == "image"){
                 if (layer["url"].trim() != ""){
