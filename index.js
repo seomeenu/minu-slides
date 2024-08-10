@@ -269,7 +269,7 @@ function createLayer(type){
         "y": 100,
     }
     if (type == "text"){
-        newLayer["text"] = "";
+        newLayer["text"] = "텍스트 입력";
         newLayer["font_size"] = 128;
         newLayer["is_bold"] = false;
         newLayer["color"] = "#111111";
