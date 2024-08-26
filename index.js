@@ -42,6 +42,8 @@ let currentSlide = 0;
 let slideData = {};
 let imgs = {}
 
+let slideDragElement = null;
+
 // main stuff
 
 function update(){
@@ -358,14 +360,42 @@ function switchSlide(index){
     dataToURL();
 }
 
+function slideDragStart(e){
+    slideDragElement = this;
+    e.dataTransfer.effectAllowed = "move";
+}
+function slideDrop(e){
+    e.stopPropagation(); 
+    if (slideDragElement != this){
+        let thisIndex = parseInt(this.id.split("-")[2]);
+        let otherIndex = parseInt(slideDragElement.id.split("-")[2]);
+        let tempSlideData = slideData["data"][thisIndex]
+        slideData["data"][thisIndex] = slideData["data"][otherIndex]
+        slideData["data"][otherIndex] = tempSlideData
+        updateSlides();
+        switchSlide(thisIndex);
+    } 
+    return false;
+} 
+function slideDragOver(e){
+    e.preventDefault();
+    return false;
+} 
+
+
 function createSlideElement(index, newSlide){
     let slideElement = document.createElement("span");
     slideElement.id = "slide-element-"+index;
     slideElement.classList.add("slide-element");
+    slideElement.draggable = true;
+    slideElement.addEventListener("dragstart", slideDragStart);
+    slideElement.addEventListener("drop", slideDrop);
+    slideElement.addEventListener("dragover", slideDragOver);
 
     let slideButton = document.createElement("button"); 
     slideButton.innerText = newSlide["text"]
-    slideButton.id = "slide-button-"+index;
+    // slideButton.id = "slide-button-"+index;
+    slideButton.id = "slide-button";
     slideButton.onclick = () => {
         switchSlide(index);
     };
@@ -373,7 +403,7 @@ function createSlideElement(index, newSlide){
 
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "🗑️";
-    deleteButton.classList.add("delete");
+    deleteButton.classList.add("delete" );
     deleteButton.onclick = () => {
         deleteSlide(index);
     }
@@ -487,7 +517,7 @@ editSlideColor.addEventListener("input", e => {
 editSlideText.addEventListener("input", e => {
     let slide = slideData["data"][currentSlide]
     slide["text"] = e.target.value;
-    document.getElementById("slide-button-"+currentSlide).innerText = e.target.value;
+    document.getElementById("slide-element-"+currentSlide).querySelector("#slide-button").innerText = e.target.value;
     dataToURL();
 });
 editImageURL.addEventListener("input", e => {
