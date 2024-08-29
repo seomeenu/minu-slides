@@ -309,26 +309,26 @@ function highlightLayer(index){
 
 // slide stuff
 
-function getNearbySlide(dir){
-    let index = 0;
-    if (dir > 0){
-        for (i in slideData["data"]){
-            index = parseInt(i);
-            if (index > currentSlide){
-                break;
-            }
-        }
-    }
-    else{
-        for (const i of Object.keys(slideData["data"]).reverse()){
-            index = parseInt(i);
-            if (index < currentSlide){
-                break;
-            }
-        }
-    }
-    return index;
-}
+// function getNearbySlide(dir){
+//     let index = 0;
+//     if (dir > 0){
+//         for (i in slideData["data"]){
+//             index = parseInt(i);
+//             if (index > currentSlide){
+//                 break;
+//             }
+//         }
+//     }
+//     else{
+//         for (const i of Object.keys(slideData["data"]).reverse()){
+//             index = parseInt(i);
+//             if (index < currentSlide){
+//                 break;
+//             }
+//         }
+//     }
+//     return index;
+// }
 
 function updateSlides(){
     slideElements.innerHTML = "";
@@ -340,12 +340,12 @@ function updateSlides(){
 }
 
 function switchSlide(index){
-    if (!(index in slideData["data"])){
-        index = -1;
-    }
-    if (index == -1){
-        index = getNearbySlide(1);
-    }
+    // if (!(index in slideData["data"])){
+    //     index = -1;
+    // }
+    // if (index == -1){
+    //     index = getNearbySlide(1);
+    // }
     layerElements.innerHTML = ""; 
     highlightSlide(index);
     currentSlide = index;
@@ -367,27 +367,26 @@ function slideDragStart(e){
 function slideDrop(e){
     e.stopPropagation(); 
     if (slideDragElement != this){
-        let thisIndex = parseInt(this.id.split("-")[2]);
-        let otherIndex = parseInt(slideDragElement.id.split("-")[2]);
-        let tempSlideData = slideData["data"][thisIndex]
-        slideData["data"][thisIndex] = slideData["data"][otherIndex]
-        slideData["data"][otherIndex] = tempSlideData
+        let index = parseInt(slideDragElement.id.split("-")[2]);
+        let otherIndex = parseInt(this.id.split("-")[2]);
+        let slide = slideData["data"].splice(index, 1);
+        slideData["data"].splice(otherIndex, 0, slide[0]);
         updateSlides();
-        switchSlide(thisIndex);
+        switchSlide(otherIndex);
     } 
     return false;
 } 
 function slideDragOver(e){
     e.preventDefault();
     return false;
-} 
-
+}
 
 function createSlideElement(index, newSlide){
     let slideElement = document.createElement("span");
     slideElement.id = "slide-element-"+index;
     slideElement.classList.add("slide-element");
     slideElement.draggable = true;
+
     slideElement.addEventListener("dragstart", slideDragStart);
     slideElement.addEventListener("drop", slideDrop);
     slideElement.addEventListener("dragover", slideDragOver);
@@ -396,66 +395,79 @@ function createSlideElement(index, newSlide){
     slideButton.innerText = newSlide["text"]
     // slideButton.id = "slide-button-"+index;
     slideButton.id = "slide-button";
-    slideButton.onclick = () => {
-        switchSlide(index);
+    slideButton.onclick = function(){ 
+        switchSlide(parseInt(this.parentElement.id.split("-")[2]));
     };
     slideElement.appendChild(slideButton);
 
     let deleteButton = document.createElement("button");
     deleteButton.innerText = "🗑️";
-    deleteButton.classList.add("delete" );
-    deleteButton.onclick = () => {
-        deleteSlide(index);
-    }
+    deleteButton.classList.add("delete");
+    deleteButton.onclick = function(){ 
+        deleteSlide(parseInt(this.parentElement.id.split("-")[2]));
+    };
     slideElement.appendChild(deleteButton);
     
     return slideElement
 }
 
+function setSlideIndex(index, newIndex){
+    // console.log(index, newIndex)
+    let slideElement = document.getElementById("slide-element-"+index);
+    slideElement.id = "slide-element-"+newIndex;
+}
+
 function deleteSlide(index){
-    if (Object.keys(slideData["data"]).length > 1){
-        slideElements.removeChild(document.getElementById("slide-element-"+index));
-        delete slideData["data"][index];
-        if (currentSlide in slideData["data"]){
-            switchSlide(currentSlide);
+    index = parseInt(index);
+    let len = slideData["data"].length-1;
+    if (len+1 > 1){
+        slideElements.removeChild(document.getElementById("slide-element-"+index)); 
+        slideData["data"].pop(index)
+        for (i=index+1; i<len+1; i++){
+            setSlideIndex(i, i-1);
+        }
+        if (currentSlide >= len-1){
+            switchSlide(len-1);
         }
         else{
-            switchSlide(-1);
+            switchSlide(currentSlide);
         }
     }
     dataToURL();
 }
 
 function createSlide(){
-    let index = parseInt(Object.keys(slideData["data"]).at(-1))+1;
-    if (Object.keys(slideData["data"]).length == 0){
-        index = 0;
-    }
+    // let index = parseInt(Object.keys(slideData["data"]).at(-1))+1;
+    // if (Object.keys(slideData["data"]).length == 0){
+    //     index = 0;
+    // }
     let newSlide = {
         "text": "슬라이드",
         "slide_color": "#eeeeee",
         "layer": {}
     }
-    slideData["data"][index] = newSlide;
-    let slideElement = createSlideElement(index, newSlide);
+
+    
+    slideData["data"].push(newSlide);
+    let len = slideData["data"].length;
+    let slideElement = createSlideElement(len-1, newSlide);
     
     slideElement.classList.add("before-popup");
     slideElements.appendChild(slideElement);
     window.getComputedStyle(slideElement).opacity;
     slideElement.classList.add("popup");
-    switchSlide(index);
+    switchSlide(len-1); 
     dataToURL();
 }
 
 function highlightSlide(index){
-    for (i in slideData["data"]){
-        element = slideData["data"][i];
+    for (i in slideData["data"]){ 
         let styleString = noBorderStyle;
         if (index == i){
             styleString = borderStyle;
         }
         document.getElementById("slide-element-"+i).style.border = styleString;
-    }    
+    }
 }
 
 //events
@@ -511,6 +523,7 @@ editY.addEventListener("input", e => {
     }
 });
 editSlideColor.addEventListener("input", e => { 
+    // console.log(currentSlide);
     slideData["data"][currentSlide]["slide_color"] = e.target.value;
     dataToURL();
 });
@@ -628,19 +641,19 @@ document.addEventListener("keydown", e => {
         history.forward(); 
         URLToData();
     }
-    if (e.key == "ArrowRight"){
-        switchSlide(getNearbySlide(1));
-    }
-    if (e.key == "ArrowLeft"){
-        switchSlide(getNearbySlide(-1));
-    }
+    // if (e.key == "ArrowRight"){
+    //     switchSlide(getNearbySlide(1));
+    // }
+    // if (e.key == "ArrowLeft"){
+    //     switchSlide(getNearbySlide(-1));
+    // }
 });
 
 // init
 
 function init(){
     slideData = {
-        "data": {}
+        "data": []
     }; 
     imgs = {};
     if (URLToData() == null){
